@@ -28,5 +28,8 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return '<p style="font-size: 100px;">1</p>'
+    
+    from . import db
+    db.init_app(app)
 
     return app
