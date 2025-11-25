@@ -1,15 +1,5 @@
-class Player():
-    def __init__(self, name, money):
-        self.name = name
-        self.money = money
-        self.cards = []
-    
-    def get_name(self):
-        return self.name
-    
-    def get_money(self):
-        return self.money
-    
+from player import Player
+
 def create_deck():
     deck = Player("deck", 0)
     x = 1
@@ -23,3 +13,5 @@ def create_deck():
     for i in deck.cards:
         print(i)
 
+dealer = Player("dealer", 0)
+create_deck()
