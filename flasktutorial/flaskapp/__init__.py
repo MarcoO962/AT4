@@ -29,12 +29,16 @@ def create_app(test_config=None):
     # def hello():
     #    return '<p style="font-size: 100px;">1</p>'
     
-    #from . import db
-    #db.init_app(app)
+    from . import db
+    db.init_app(app)
 
     from . import auth
     app.register_blueprint(auth.bp)
 
+    from . import blog
+    app.register_blueprint(blog.bp)
+    app.add_url_rule('/', endpoint='index')
+    
     return app
 
 #flask --app flaskapp run --debug
