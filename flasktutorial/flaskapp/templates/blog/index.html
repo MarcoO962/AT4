@@ -1,28 +1,124 @@
 {% extends 'base.html' %}
 
 {% block header %}
-  <h1>{% block title %}Posts{% endblock %}</h1>
-  {% if g.user %}
-    <a class="action" href="{{ url_for('blog.create') }}">New</a>
-  {% endif %}
+  <h1>{% block title %}Chatroom{% endblock %}</h1>
 {% endblock %}
 
 {% block content %}
-  {% for post in posts %}
-    <article class="post">
-      <header>
-        <div>
-          <h1>{{ post['title'] }}</h1>
-          <div class="about">by {{ post['username'] }} on {{ post['created'].strftime('%Y-%m-%d') }}</div>
+  <div class="chat-container">
+    <div class="messages-area">
+      {% for message in messages %}
+        <div class="message">
+          <div class="message-header">
+            <strong>{{ message['username'] }}</strong>
+            <span class="timestamp">{{ message['created'].strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            {% if g.user['id'] == message['author_id'] %}
+              <form method="POST" action="{{ url_for('blog.delete_message', id=message['id']) }}" style="display: inline;">
+                <button type="submit" class="delete-btn">Delete</button>
+              </form>
+            {% endif %}
+          </div>
+          <div class="message-content">
+            {{ message['content'] }}
+          </div>
         </div>
-        {% if g.user['id'] == post['author_id'] %}
-          <a class="action" href="{{ url_for('blog.update', id=post['id']) }}">Edit</a>
-        {% endif %}
-      </header>
-      <p class="body">{{ post['body'] }}</p>
-    </article>
-    {% if not loop.last %}
-      <hr>
+      {% endfor %}
+    </div>
+
+    {% if g.user %}
+      <form class="message-form" method="POST" action="{{ url_for('blog.send_message') }}">
+        <input type="text" name="content" placeholder="Type a message..." required autofocus>
+        <button type="submit">Send</button>
+      </form>
+    {% else %}
+      <p><a href="{{ url_for('auth.login') }}">Login</a> to send messages.</p>
     {% endif %}
-  {% endfor %}
+  </div>
+
+  <style>
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      max-width: 800px;
+      margin: 0 auto;
+      background: #f5f5f5;
+    }
+
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .message {
+      background: white;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .message-header {
+      display: flex;
+      gap: 10px;
+      font-size: 0.9em;
+      align-items: center;
+    }
+
+    .timestamp {
+      color: #999;
+      font-size: 0.85em;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 2px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.8em;
+    }
+
+    .delete-btn:hover {
+      background: #c82333;
+    }
+
+    .message-content {
+      margin-top: 8px;
+      word-wrap: break-word;
+    }
+
+    .message-form {
+      display: flex;
+      padding: 15px;
+      background: white;
+      border-top: 1px solid #ddd;
+      gap: 10px;
+    }
+
+    .message-form input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+
+    .message-form button {
+      padding: 10px 20px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .message-form button:hover {
+      background: #0056b3;
+    }
+  </style>
 {% endblock %}

@@ -11,86 +11,50 @@ bp = Blueprint('blog', __name__)
 @bp.route('/')
 def index():
     db = get_db()
-    posts = db.execute(
-        'SELECT p.id, title, body, created, author_id, username'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' ORDER BY created DESC'
+    messages = db.execute(
+        'SELECT m.id, content, created, author_id, username'
+        ' FROM message m JOIN user u ON m.author_id = u.id'
+        ' ORDER BY created ASC'
     ).fetchall()
-    return render_template('blog/index.html', posts=posts)
+    return render_template('blog/index.html', messages=messages)
 
-@bp.route('/create', methods=('GET', 'POST'))
+@bp.route('/send', methods=('POST',))
 @login_required
-def create():
-    if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        error = None
+def send_message():
+    content = request.form.get('content', '').strip()
+    
+    if content:
+        db = get_db()
+        db.execute(
+            'INSERT INTO message (content, author_id)'
+            ' VALUES (?, ?)',
+            (content, g.user['id'])
+        )
+        db.commit()
+    
+    return redirect(url_for('blog.index'))
 
-        if not title:
-            error = 'Title is required.'
-
-        if error is not None:
-            flash(error)
-        else:
-            db = get_db()
-            db.execute(
-                'INSERT INTO post (title, body, author_id)'
-                ' VALUES (?, ?, ?)',
-                (title, body, g.user['id'])
-            )
-            db.commit()
-            return redirect(url_for('blog.index'))
-
-    return render_template('blog/create.html')
-
-def get_post(id, check_author=True):
-    post = get_db().execute(
-        'SELECT p.id, title, body, created, author_id, username'
-        ' FROM post p JOIN user u ON p.author_id = u.id'
-        ' WHERE p.id = ?',
+def get_message(id, check_author=True):
+    message = get_db().execute(
+        'SELECT m.id, content, created, author_id, username'
+        ' FROM message m JOIN user u ON m.author_id = u.id'
+        ' WHERE m.id = ?',
         (id,)
     ).fetchone()
 
-    if post is None:
-        abort(404, f"Post id {id} doesn't exist.")
+    if message is None:
+        abort(404, f"Message id {id} doesn't exist.")
 
-    if check_author and post['author_id'] != g.user['id']:
+    if check_author and message['author_id'] != g.user['id']:
         abort(403)
 
-    return post
-
-@bp.route('/<int:id>/update', methods=('GET', 'POST'))
-@login_required
-def update(id):
-    post = get_post(id)
-
-    if request.method == 'POST':
-        title = request.form['title']
-        body = request.form['body']
-        error = None
-
-        if not title:
-            error = 'Title is required.'
-
-        if error is not None:
-            flash(error)
-        else:
-            db = get_db()
-            db.execute(
-                'UPDATE post SET title = ?, body = ?'
-                ' WHERE id = ?',
-                (title, body, id)
-            )
-            db.commit()
-            return redirect(url_for('blog.index'))
-
-    return render_template('blog/update.html', post=post)
+    return message
 
 @bp.route('/<int:id>/delete', methods=('POST',))
 @login_required
-def delete(id):
-    get_post(id)
+def delete_message(id):
+    get_message(id)
     db = get_db()
-    db.execute('DELETE FROM post WHERE id = ?', (id,))
+    db.execute('DELETE FROM message WHERE id = ?', (id,))
     db.commit()
     return redirect(url_for('blog.index'))
