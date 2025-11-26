@@ -11,7 +11,13 @@
         <div class="message">
           <div class="message-header">
             <strong>{{ message['username'] }}</strong>
-            <span class="timestamp">{{ message['created'].strftime('%Y-%m-%d %H:%M:%S') }}</span>
+            <span class="timestamp">
+              {% if message['created'] is string %}
+                {{ message['created'] }}
+              {% else %}
+                {{ message['created'].strftime('%Y-%m-%d %H:%M:%S') }}
+              {% endif %}
+            </span>
             {% if g.user['id'] == message['author_id'] %}
               <form method="POST" action="{{ url_for('blog.delete_message', id=message['id']) }}" style="display: inline;">
                 <button type="submit" class="delete-btn">Delete</button>
